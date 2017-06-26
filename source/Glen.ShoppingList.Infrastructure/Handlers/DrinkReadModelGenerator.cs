@@ -6,11 +6,11 @@
     using ReadModel;
     using WriteModel;
 
-    public class DrinksReadModelGenerator : IEventHandler<DrinkAdded>
+    public class DrinkReadModelGenerator : IEventHandler<DrinkAdded>
     {
         private readonly Func<ShoppingListContext> _contextFactory;
 
-        public DrinksReadModelGenerator(Func<ShoppingListContext> contextFactory)
+        public DrinkReadModelGenerator(Func<ShoppingListContext> contextFactory)
         {
             _contextFactory = contextFactory;
         }

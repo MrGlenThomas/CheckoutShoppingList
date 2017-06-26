@@ -9,6 +9,7 @@
     using Microsoft.Extensions.Logging;
     using Infrastructure;
     using Infrastructure.Messaging;
+    using Infrastructure.Messaging.Handling;
     using Infrastructure.Serialization;
     using Swashbuckle.AspNetCore.Swagger;
 
@@ -35,8 +36,9 @@
             services.AddTransient<ITextSerializer, JsonTextSerializer>();
             services.AddTransient<IMessageSender, MessageSender>();
             services.AddTransient<ICommandBus, CommandBus>();
+            services.AddTransient<ICommandHandlerRegistry, CommandProcessor>();
 
-            services.AddTransient<Func<ShoppingListContext>>((s) => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
+            services.AddTransient<Func<ShoppingListContext>>(s => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
 
             services.AddMvc();
 
