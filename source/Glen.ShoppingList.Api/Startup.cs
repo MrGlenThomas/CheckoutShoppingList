@@ -1,6 +1,8 @@
 ﻿namespace Glen.ShoppingList.Api
 {
     using System;
+    using System.Runtime.InteropServices.ComTypes;
+    using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -12,8 +14,13 @@
     using Infrastructure.Handlers;
     using Infrastructure.Messaging;
     using Infrastructure.Messaging.Handling;
+    using Infrastructure.ReadModel;
     using Infrastructure.Serialization;
     using Infrastructure.WriteModel;
+    using Microsoft.AspNetCore.Authentication.Cookies;
+    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+    using Microsoft.AspNetCore.Mvc;
+    using Model;
     using Swashbuckle.AspNetCore.Swagger;
 
     public class Startup
@@ -73,7 +80,41 @@
 
             services.AddTransient<Func<ShoppingListContext>>(s => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
 
-            services.AddMvc();
+            services.AddTransient<ShoppingListIdentityInitializer>();
+            services.AddIdentity<ShoppingListUser, IdentityRole>()
+                .AddEntityFrameworkStores<ShoppingListContext>();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Cookies.ApplicationCookie.Events = new CookieAuthenticationEvents()
+                {
+                    OnRedirectToLogin = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments("/api")
+                            && context.Response.StatusCode == 200)
+                        {
+                            context.Response.StatusCode = 401;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                    OnRedirectToAccessDenied = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments("/api")
+                            && context.Response.StatusCode == 200)
+                        {
+                            context.Response.StatusCode = 403;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+            services.AddMvc(options =>
+            {
+                options.Filters.Add(new RequireHttpsAttribute());
+            });
 
             // Register the Swagger generator
             services.AddSwaggerGen(c =>
@@ -83,7 +124,7 @@
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ShoppingListIdentityInitializer shoppingListIdentityInitializer)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -95,7 +136,11 @@
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
             });
 
+            app.UseIdentity();
+
             app.UseMvc();
+
+            shoppingListIdentityInitializer.Seed().Wait();
         }
     }
 }

@@ -6,10 +6,12 @@
     using Infrastructure.Commands;
     using Infrastructure.Messaging;
     using Infrastructure.ReadModel;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Model;
     using ShoppingList.Model.Commands;
 
+    [Authorize]
     [Route("api/[controller]")]
     public class DrinksController : Controller
     {
@@ -37,7 +39,7 @@
 
             if (drinkId == null)
             {
-                return NotFound();
+                return NotFound($"Drink not found with name '{drinkName}'");
             }
 
             var drink = _context.FindDrink(drinkId);
@@ -55,7 +57,7 @@
             if (existingDrinkItem != null)
             {
                 // Drink already exists on shopping list.
-                return StatusCode(422);
+                return StatusCode(422, $"Drink '{request.DrinkName}' already exists");
             }
 
             var command = new AddDrink { DrinkName = request.DrinkName, Quantity = request.Quantity };
@@ -74,7 +76,7 @@
             if (existingDrinkId == null)
             {
                 // Drink doesn't exist on shopping list.
-                return NotFound();
+                return NotFound($"Drink not found with name '{drinkName}'");
             }
 
             var command = new UpdateDrinkQuantity { DrinkId = existingDrinkId.Value, DrinkName = drinkName, Quantity = quantity };
@@ -93,7 +95,7 @@
             if (existingDrinkId == null)
             {
                 // Drink doesn't exist on shopping list.
-                return NotFound();
+                return NotFound($"Drink not found with name '{drinkName}'");
             }
 
             var command = new DeleteDrink { DrinkId = existingDrinkId.Value };
