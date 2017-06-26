@@ -18,15 +18,15 @@
         {
             using (var context = _contextFactory.Invoke())
             {
-                var orderProjection = context
+                var drinkProjection = context
                     .Query<Drink>()
                     .Where(o => o.Name == drinkName)
                     .Select(o => new { o.Id })
                     .FirstOrDefault();
 
-                if (orderProjection != null)
+                if (drinkProjection != null)
                 {
-                    return orderProjection.Id;
+                    return drinkProjection.Id;
                 }
 
                 return null;

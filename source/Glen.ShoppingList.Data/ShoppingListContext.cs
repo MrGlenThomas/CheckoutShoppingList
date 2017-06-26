@@ -12,6 +12,13 @@
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Drink>().HasKey("Id");
+        }
+
         public DbSet<Drink> Drinks { get; set; }
 
         public T Find<T>(Guid id) where T : class

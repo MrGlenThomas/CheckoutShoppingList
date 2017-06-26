@@ -21,7 +21,7 @@
             Id = id;
         }
 
-        public Guid Id { get; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Gets the entity's version. As the entity is being updated and events being generated, the version is incremented.
