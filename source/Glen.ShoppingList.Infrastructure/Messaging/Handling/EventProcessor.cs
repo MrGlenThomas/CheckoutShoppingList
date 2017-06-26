@@ -14,18 +14,18 @@
         public EventProcessor(IMessageReceiver receiver, ITextSerializer serializer)
             : base(receiver, serializer)
         {
-            this._messageDispatcher = new EventDispatcher();
+            _messageDispatcher = new EventDispatcher();
         }
 
         public void Register(IEventHandler eventHandler)
         {
-            this._messageDispatcher.Register(eventHandler);
+            _messageDispatcher.Register(eventHandler);
         }
 
         protected override void ProcessMessage(object payload, string correlationId)
         {
             var @event = (IEvent)payload;
-            this._messageDispatcher.DispatchMessage(@event, null, correlationId, "");
+            _messageDispatcher.DispatchMessage(@event, null, correlationId, "");
         }
     }
 }

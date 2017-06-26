@@ -2,8 +2,8 @@
 {
     using System;
     using System.Collections.Generic;
+    using Events;
     using EventSourcing;
-    using Model.Events;
 
     public class Drink : EventSourced
     {
@@ -14,7 +14,9 @@
         protected Drink(Guid id)
             : base(id)
         {
+            Handles<DrinkAdded>(OnDrinkAdded);
             Handles<DrinkQuantityUpdated>(OnQuantityUpdated);
+            Handles<DrinkDeleted>(OnDrinkDeleted);
         }
 
         public Drink(Guid id, IEnumerable<IVersionedEvent> history)
@@ -34,9 +36,25 @@
             Update(new DrinkQuantityUpdated { Quantity = quantity });
         }
 
+        public void Delete()
+        {
+            Update(new DrinkDeleted());
+        }
+
+        private void OnDrinkAdded(DrinkAdded @event)
+        {
+            Name = @event.DrinkName;
+            Quantity = @event.Quantity;
+        }
+
         private void OnQuantityUpdated(DrinkQuantityUpdated drinkQuantityUpdated)
         {
             Quantity = drinkQuantityUpdated.Quantity;
+        }
+
+        private void OnDrinkDeleted(DrinkDeleted drinkDeleted)
+        {
+            Quantity = 0;
         }
     }
 }

@@ -21,11 +21,11 @@
 
         private static void Register()
         {
-            var commandHandlerRegistry = new CommandProcessor(new MessageReceiver(), new JsonTextSerializer());
+            var commandHandlerRegistry = new CommandProcessor(new DirectMessageReceiver(), new JsonTextSerializer());
 
             var drinksCommandHandler =
                 new DrinkCommandHandler(
-                    new EventSourcedRepository<Drink>(new EventBus(new MessageSender(), new JsonTextSerializer()),
+                    new EventSourcedRepository<Drink>(new EventBus(new PipesMessageSender(), new JsonTextSerializer()),
                         new JsonTextSerializer(), () => new EventStoreContext()));
 
             commandHandlerRegistry.Register(drinksCommandHandler);

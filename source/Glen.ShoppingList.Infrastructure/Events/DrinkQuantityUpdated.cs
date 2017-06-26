@@ -1,6 +1,6 @@
-﻿namespace Glen.ShoppingList.Model.Events
+﻿namespace Glen.ShoppingList.Infrastructure.Events
 {
-    using Infrastructure.EventSourcing;
+    using EventSourcing;
 
     public class DrinkQuantityUpdated : VersionedEvent
     {

@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using Commands;
     using Infrastructure;
+    using Infrastructure.Commands;
     using Infrastructure.Messaging;
     using Infrastructure.ReadModel;
     using Microsoft.AspNetCore.Mvc;
@@ -57,7 +58,7 @@
                 return StatusCode(422);
             }
 
-            var command = new AddDrinks { DrinkName = request.DrinkName, Quantity = request.Quantity };
+            var command = new AddDrink { DrinkName = request.DrinkName, Quantity = request.Quantity };
             _bus.Send(command);
 
             return Ok();
@@ -73,7 +74,7 @@
             if (existingDrinkId == null)
             {
                 // Drink doesn't exist on shopping list.
-                return BadRequest();
+                return NotFound();
             }
 
             var command = new UpdateDrinkQuantity { DrinkId = existingDrinkId.Value, DrinkName = drinkName, Quantity = quantity };
@@ -82,10 +83,23 @@
             return Ok();
         }
 
-        // DELETE api/drinks/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        // DELETE api/drinks/pepsi
+        [HttpDelete("{drinkName}")]
+        public IActionResult Delete(string drinkName)
         {
+            var existingDrinkId =
+                _context.LocateDrink(drinkName);
+
+            if (existingDrinkId == null)
+            {
+                // Drink doesn't exist on shopping list.
+                return NotFound();
+            }
+
+            var command = new DeleteDrink { DrinkId = existingDrinkId.Value };
+            _bus.Send(command);
+
+            return Ok();
         }
     }
 }

@@ -16,6 +16,12 @@
         event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
         /// <summary>
+        /// Public method to allow direct message sending
+        /// </summary>
+        /// <param name="message"></param>
+        void ReceiveMessage(Message message);
+
+        /// <summary>
         /// Starts the listener.
         /// </summary>
         void Start();

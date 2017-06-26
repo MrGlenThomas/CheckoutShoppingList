@@ -1,12 +1,12 @@
 ﻿namespace Glen.ShoppingList.Infrastructure.Handlers
 {
     using System;
+    using Events;
     using Messaging.Handling;
-    using Model.Events;
     using ReadModel;
     using WriteModel;
 
-    public class DrinkReadModelGenerator : IEventHandler<DrinkAdded>
+    public class DrinkReadModelGenerator : IEventHandler<DrinkAdded>, IEventHandler<DrinkQuantityUpdated>, IEventHandler<DrinkDeleted>
     {
         private readonly Func<ShoppingListContext> _contextFactory;
 
@@ -19,7 +19,7 @@
         {
             using (var repository = _contextFactory.Invoke())
             {
-                var dto = repository.Find<Drink>(drinkAddedEvent.SourceId);
+                var dto = repository.Find<ShoppingListDrink>(drinkAddedEvent.SourceId);
                 if (dto != null)
                 {
                     // $"Ignoring DrinkAdded event for drink with ID {@event.SourceId} as it was already created."
@@ -34,6 +34,40 @@
 
                     repository.SaveChanges();
                 }
+            }
+        }
+
+        public void Handle(DrinkQuantityUpdated drinkQuantityUpdatedEvent)
+        {
+            using (var repository = _contextFactory.Invoke())
+            {
+                var dto = repository.Find<ShoppingListDrink>(drinkQuantityUpdatedEvent.SourceId);
+                if (dto == null)
+                {
+                    throw new EntityNotFoundException(drinkQuantityUpdatedEvent.SourceId, typeof(ShoppingListDrink).Name);
+                }
+
+                dto.Quantity = drinkQuantityUpdatedEvent.Quantity;
+
+                repository.Set<ShoppingListDrink>().Update(dto);
+
+                repository.SaveChanges();
+            }
+        }
+
+        public void Handle(DrinkDeleted drinkDeletedEvent)
+        {
+            using (var repository = _contextFactory.Invoke())
+            {
+                var dto = repository.Find<ShoppingListDrink>(drinkDeletedEvent.SourceId);
+                if (dto == null)
+                {
+                    throw new EntityNotFoundException(drinkDeletedEvent.SourceId, typeof(ShoppingListDrink).Name);
+                }
+
+                repository.Set<ShoppingListDrink>().Remove(dto);
+
+                repository.SaveChanges();
             }
         }
     }

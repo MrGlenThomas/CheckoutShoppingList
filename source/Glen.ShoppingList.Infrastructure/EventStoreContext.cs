@@ -5,6 +5,18 @@
 
     public class EventStoreContext : DbContext
     {
+        public EventStoreContext(DbContextOptions<EventStoreContext> options) : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Event>().HasKey(e => new { e.AggregateId, e.Version });
+        }
+
+        public DbSet<Event> Events { get; set; }
     }
 
     public class Event

@@ -7,7 +7,7 @@
     using System.Threading.Tasks;
     using Newtonsoft.Json;
 
-    public class MessageReceiver : IMessageReceiver
+    public class PipesMessageReceiver : IMessageReceiver
     {
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
@@ -49,8 +49,13 @@
 
                 var message = JsonConvert.DeserializeObject<Message>(jsonMessage);
 
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
+                ReceiveMessage(message);
             }
+        }
+
+        public void ReceiveMessage(Message message)
+        {
+            MessageReceived?.Invoke(this, new MessageReceivedEventArgs(message));
         }
 
         public void Stop()

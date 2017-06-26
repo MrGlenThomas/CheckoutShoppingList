@@ -6,7 +6,7 @@
     using System.Linq;
     using Infrastructure.Messaging;
 
-    public class AddDrinks : ICommand, IValidatableObject
+    public class AddDrink : ICommand, IValidatableObject
     {
         public Guid Id { get; }
 
@@ -14,7 +14,7 @@
 
         public int Quantity { get; set; }
 
-        public AddDrinks()
+        public AddDrink()
         {
             Id = Guid.NewGuid();
         }

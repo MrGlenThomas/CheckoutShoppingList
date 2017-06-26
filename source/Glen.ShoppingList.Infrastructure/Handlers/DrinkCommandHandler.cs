@@ -1,13 +1,14 @@
 ﻿namespace Glen.ShoppingList.Infrastructure.Handlers
 {
     using Api.Commands;
+    using Commands;
     using EventSourcing;
     using Messaging.Handling;
     using Model;
     using Model.Commands;
     using WriteModel;
 
-    public class DrinkCommandHandler : ICommandHandler<AddDrinks>, ICommandHandler<UpdateDrinkQuantity>
+    public class DrinkCommandHandler : ICommandHandler<AddDrink>, ICommandHandler<UpdateDrinkQuantity>, ICommandHandler<DeleteDrink>
     {
         private readonly IEventSourcedRepository<Drink> _repository;
 
@@ -16,7 +17,7 @@
             _repository = repository;
         }
 
-        public void Handle(AddDrinks command)
+        public void Handle(AddDrink command)
         {
             var drink = new Drink(command.Id, command.DrinkName, command.Quantity);
 
@@ -27,6 +28,13 @@
         {
             var drink = _repository.Get(command.DrinkId);
             drink.UpdateDrinkQuantity(command.Quantity);
+            _repository.Save(drink, command.Id.ToString());
+        }
+
+        public void Handle(DeleteDrink command)
+        {
+            var drink = _repository.Get(command.DrinkId);
+            drink.Delete();
             _repository.Save(drink, command.Id.ToString());
         }
     }
