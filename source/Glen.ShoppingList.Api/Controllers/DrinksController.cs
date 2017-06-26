@@ -2,11 +2,11 @@
 {
     using System.Collections.Generic;
     using Commands;
-    using Data.ReadModel;
+    using Infrastructure;
     using Infrastructure.Messaging;
+    using Infrastructure.ReadModel;
     using Microsoft.AspNetCore.Mvc;
     using Model;
-    using ShoppingList.Model;
     using ShoppingList.Model.Commands;
 
     [Route("api/[controller]")]
@@ -23,7 +23,7 @@
 
         // GET api/drinks
         [HttpGet]
-        public IEnumerable<Drink> Get()
+        public IEnumerable<ShoppingListDrink> Get()
         {
             return _context.AllDrinks();
         }

@@ -1,4 +1,4 @@
-﻿namespace Glen.ShoppingList.Data
+﻿namespace Glen.ShoppingList.Infrastructure
 {
     using System;
     using Microsoft.EntityFrameworkCore;

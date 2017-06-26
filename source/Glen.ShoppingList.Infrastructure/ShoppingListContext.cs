@@ -1,9 +1,9 @@
-﻿namespace Glen.ShoppingList.Data
+﻿namespace Glen.ShoppingList.Infrastructure
 {
     using System;
     using System.Linq;
     using Microsoft.EntityFrameworkCore;
-    using Model;
+    using ReadModel;
 
     public class ShoppingListContext : DbContext
     {
@@ -16,10 +16,10 @@
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Drink>().HasKey("Id");
+            modelBuilder.Entity<ShoppingListDrink>().HasKey("Id");
         }
 
-        public DbSet<Drink> Drinks { get; set; }
+        public DbSet<ShoppingListDrink> Drinks { get; set; }
 
         public T Find<T>(Guid id) where T : class
         {

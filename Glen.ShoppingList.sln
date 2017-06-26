@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26430.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glen.ShoppingList.Api", "source\Glen.ShoppingList.Api\Glen.ShoppingList.Api.csproj", "{3A13BB82-5359-4021-B47A-D1F1CB79233F}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Glen.ShoppingList.Model", "source\Glen.ShoppingList.Model\Glen.ShoppingList.Model.csproj", "{C7AC45C8-A5D2-4266-AC03-D71ED8A39F28}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glen.ShoppingList.Data", "source\Glen.ShoppingList.Data\Glen.ShoppingList.Data.csproj", "{B24F968A-33EA-4A1E-9C7B-193FA6BFD7ED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glen.ShoppingList.Infrastructure", "source\Glen.ShoppingList.Infrastructure\Glen.ShoppingList.Infrastructure.csproj", "{4EDFB564-D894-46A8-88E4-395AA4767549}"
 EndProject
@@ -21,14 +17,6 @@ Global
 		{3A13BB82-5359-4021-B47A-D1F1CB79233F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A13BB82-5359-4021-B47A-D1F1CB79233F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A13BB82-5359-4021-B47A-D1F1CB79233F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C7AC45C8-A5D2-4266-AC03-D71ED8A39F28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C7AC45C8-A5D2-4266-AC03-D71ED8A39F28}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C7AC45C8-A5D2-4266-AC03-D71ED8A39F28}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C7AC45C8-A5D2-4266-AC03-D71ED8A39F28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B24F968A-33EA-4A1E-9C7B-193FA6BFD7ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B24F968A-33EA-4A1E-9C7B-193FA6BFD7ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B24F968A-33EA-4A1E-9C7B-193FA6BFD7ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B24F968A-33EA-4A1E-9C7B-193FA6BFD7ED}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4EDFB564-D894-46A8-88E4-395AA4767549}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4EDFB564-D894-46A8-88E4-395AA4767549}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EDFB564-D894-46A8-88E4-395AA4767549}.Release|Any CPU.ActiveCfg = Release|Any CPU

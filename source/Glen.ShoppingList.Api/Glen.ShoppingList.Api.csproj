@@ -19,9 +19,7 @@
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Glen.ShoppingList.Data\Glen.ShoppingList.Data.csproj" />
     <ProjectReference Include="..\Glen.ShoppingList.Infrastructure\Glen.ShoppingList.Infrastructure.csproj" />
-    <ProjectReference Include="..\Glen.ShoppingList.Model\Glen.ShoppingList.Model.csproj" />
   </ItemGroup>
 
 </Project>

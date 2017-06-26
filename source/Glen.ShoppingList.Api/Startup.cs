@@ -7,8 +7,7 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Data;
-    using Data.ReadModel;
+    using Infrastructure;
     using Infrastructure.Messaging;
     using Infrastructure.Serialization;
     using Swashbuckle.AspNetCore.Swagger;

@@ -1,9 +1,11 @@
-﻿namespace Glen.ShoppingList.Model.Handlers
+﻿namespace Glen.ShoppingList.Infrastructure.Handlers
 {
     using Api.Commands;
-    using Commands;
-    using Infrastructure.EventSourcing;
-    using Infrastructure.Messaging.Handling;
+    using EventSourcing;
+    using Messaging.Handling;
+    using Model;
+    using Model.Commands;
+    using WriteModel;
 
     public class DrinkCommandHandler : ICommandHandler<AddDrinks>, ICommandHandler<UpdateDrinkQuantity>
     {

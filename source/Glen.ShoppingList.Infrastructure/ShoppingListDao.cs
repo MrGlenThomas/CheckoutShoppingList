@@ -1,9 +1,10 @@
-﻿namespace Glen.ShoppingList.Data.ReadModel
+﻿namespace Glen.ShoppingList.Infrastructure
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using Model;
+    using ReadModel;
+    using WriteModel;
 
     public class ShoppingListDao : IShoppingListDao
     {
@@ -19,21 +20,16 @@
             using (var context = _contextFactory.Invoke())
             {
                 var drinkProjection = context
-                    .Query<Drink>()
-                    .Where(o => o.Name == drinkName)
+                    .Query<ShoppingListDrink>()
+                    .Where(o => o.DrinkName == drinkName)
                     .Select(o => new { o.Id })
                     .FirstOrDefault();
 
-                if (drinkProjection != null)
-                {
-                    return drinkProjection.Id;
-                }
-
-                return null;
+                return drinkProjection?.Id;
             }
         }
 
-        public IEnumerable<Drink> AllDrinks()
+        public IEnumerable<ShoppingListDrink> AllDrinks()
         {
             using (var context = _contextFactory.Invoke())
             {
@@ -41,11 +37,11 @@
             }
         }
 
-        public Drink FindDrink(Guid? drinkId)
+        public ShoppingListDrink FindDrink(Guid? drinkId)
         {
             using (var context = _contextFactory.Invoke())
             {
-                return context.Query<Drink>().FirstOrDefault(dto => dto.Id == drinkId);
+                return context.Query<ShoppingListDrink>().FirstOrDefault(dto => dto.Id == drinkId);
             }
         }
     }

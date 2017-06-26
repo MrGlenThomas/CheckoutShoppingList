@@ -1,9 +1,9 @@
-﻿namespace Glen.ShoppingList.Model
+﻿namespace Glen.ShoppingList.Infrastructure.WriteModel
 {
     using System;
     using System.Collections.Generic;
-    using Events;
-    using Infrastructure.EventSourcing;
+    using EventSourcing;
+    using Model.Events;
 
     public class Drink : EventSourced
     {
