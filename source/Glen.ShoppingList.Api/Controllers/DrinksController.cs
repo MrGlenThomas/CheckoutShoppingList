@@ -18,6 +18,7 @@
         public DrinksController(IShoppingListDao context, ICommandBus bus)
         {
             _context = context;
+            _bus = bus;
         }
 
         // GET api/drinks
