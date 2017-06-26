@@ -1,13 +1,16 @@
 ﻿namespace Glen.ShoppingList.Api.Controllers
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Commands;
     using Infrastructure;
     using Infrastructure.Commands;
     using Infrastructure.Messaging;
     using Infrastructure.ReadModel;
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Logging;
     using Model;
     using ShoppingList.Model.Commands;
 
@@ -17,11 +20,16 @@
     {
         private readonly IShoppingListDao _context;
         private readonly ICommandBus _bus;
+        private readonly ILogger<DrinksController> _logger;
+        private readonly UserManager<ShoppingListUser> _userManager;
 
-        public DrinksController(IShoppingListDao context, ICommandBus bus)
+        public DrinksController(IShoppingListDao context, ICommandBus bus, ILogger<DrinksController> logger,
+            UserManager<ShoppingListUser> userManager)
         {
             _context = context;
             _bus = bus;
+            _logger = logger;
+            _userManager = userManager;
         }
 
         // GET api/drinks
@@ -49,7 +57,7 @@
 
         // POST api/drinks
         [HttpPost]
-        public IActionResult Post([FromBody]AddDrinkRequest request)
+        public async Task<IActionResult> Post([FromBody]AddDrinkRequest request)
         {
             var existingDrinkItem =
                 _context.LocateDrink(request.DrinkName);
@@ -60,7 +68,9 @@
                 return StatusCode(422, $"Drink '{request.DrinkName}' already exists");
             }
 
-            var command = new AddDrink { DrinkName = request.DrinkName, Quantity = request.Quantity };
+            var user = await _userManager.FindByNameAsync(this.User.Identity.Name);
+
+            var command = new AddDrink { DrinkName = request.DrinkName, Quantity = request.Quantity, CreatedBy = user.UserName };
             _bus.Send(command);
 
             return Ok();
@@ -68,7 +78,7 @@
 
         // PUT api/drinks/pepsi
         [HttpPut("{drinkName}")]
-        public IActionResult Put(string drinkName, [FromBody]int quantity)
+        public async Task<IActionResult> Put(string drinkName, [FromBody]int quantity)
         {
             var existingDrinkId =
                 _context.LocateDrink(drinkName);
@@ -78,6 +88,12 @@
                 // Drink doesn't exist on shopping list.
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
+
+            var drink = _context.FindDrink(existingDrinkId);
+
+            var user = await _userManager.FindByNameAsync(this.User.Identity.Name);
+
+            if (drink.CreatedBy != user.UserName) return Forbid();
 
             var command = new UpdateDrinkQuantity { DrinkId = existingDrinkId.Value, DrinkName = drinkName, Quantity = quantity };
             _bus.Send(command);
@@ -87,7 +103,7 @@
 
         // DELETE api/drinks/pepsi
         [HttpDelete("{drinkName}")]
-        public IActionResult Delete(string drinkName)
+        public async Task<IActionResult> Delete(string drinkName)
         {
             var existingDrinkId =
                 _context.LocateDrink(drinkName);
@@ -97,6 +113,12 @@
                 // Drink doesn't exist on shopping list.
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
+
+            var drink = _context.FindDrink(existingDrinkId);
+
+            var user = await _userManager.FindByNameAsync(this.User.Identity.Name);
+
+            if (drink.CreatedBy != user.UserName) return Forbid();
 
             var command = new DeleteDrink { DrinkId = existingDrinkId.Value };
             _bus.Send(command);

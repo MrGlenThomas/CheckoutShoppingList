@@ -9,6 +9,7 @@
     using Infrastructure.ReadModel;
     using Infrastructure.Serialization;
     using Infrastructure.WriteModel;
+    using Microsoft.EntityFrameworkCore;
 
     class Program
     {
@@ -26,7 +27,9 @@
             var drinksCommandHandler =
                 new DrinkCommandHandler(
                     new EventSourcedRepository<Drink>(new EventBus(new PipesMessageSender(), new JsonTextSerializer()),
-                        new JsonTextSerializer(), () => new EventStoreContext()));
+                        new JsonTextSerializer(),
+                        () => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>()
+                            .UseInMemoryDatabase().Options)));
 
             commandHandlerRegistry.Register(drinksCommandHandler);
             

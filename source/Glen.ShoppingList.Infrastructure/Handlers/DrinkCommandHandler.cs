@@ -19,7 +19,7 @@
 
         public void Handle(AddDrink command)
         {
-            var drink = new Drink(command.Id, command.DrinkName, command.Quantity);
+            var drink = new Drink(command.Id, command.DrinkName, command.Quantity, command.CreatedBy);
 
             _repository.Save(drink, command.Id.ToString());
         }

@@ -7,5 +7,7 @@
         public string DrinkName { get; set; }
 
         public int Quantity { get; set; }
+
+        public string CreatedBy { get; set; }
     }
 }

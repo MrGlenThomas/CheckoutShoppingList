@@ -30,7 +30,8 @@
                         new ShoppingListDrink(
                             drinkAddedEvent.SourceId,
                             drinkAddedEvent.DrinkName,
-                            drinkAddedEvent.Quantity));
+                            drinkAddedEvent.Quantity,
+                            drinkAddedEvent.CreatedBy));
 
                     repository.SaveChanges();
                 }

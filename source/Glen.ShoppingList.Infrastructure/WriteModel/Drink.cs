@@ -25,10 +25,10 @@
             LoadFrom(history);
         }
 
-        public Drink(Guid id, string drinkName, int quantity)
+        public Drink(Guid id, string drinkName, int quantity, string createdBy)
             : this(id)
         {
-            Update(new DrinkAdded { DrinkName = drinkName, Quantity = quantity });
+            Update(new DrinkAdded { DrinkName = drinkName, Quantity = quantity, CreatedBy = createdBy });
         }
 
         public void UpdateDrinkQuantity(int quantity)
