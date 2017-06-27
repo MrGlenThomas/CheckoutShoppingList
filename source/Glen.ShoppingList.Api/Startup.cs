@@ -1,7 +1,6 @@
 ﻿namespace Glen.ShoppingList.Api
 {
     using System;
-    using System.Runtime.InteropServices.ComTypes;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.AspNetCore.Builder;
@@ -20,7 +19,6 @@
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.AspNetCore.Mvc;
-    using Model;
     using Swashbuckle.AspNetCore.Swagger;
 
     public class Startup
