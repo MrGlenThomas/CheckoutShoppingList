@@ -23,12 +23,12 @@
         private readonly ILogger<DrinksController> _logger;
         private readonly UserManager<ShoppingListUser> _userManager;
 
-        public DrinksController(IShoppingListDao context, ICommandBus bus, ILogger<DrinksController> logger,
+        public DrinksController(IShoppingListDao context, ICommandBus bus, ILoggerFactory logger,
             UserManager<ShoppingListUser> userManager)
         {
             _context = context;
             _bus = bus;
-            _logger = logger;
+            _logger = logger.CreateLogger<DrinksController>();
             _userManager = userManager;
         }
 
@@ -36,6 +36,8 @@
         [HttpGet]
         public IEnumerable<ShoppingListDrink> Get()
         {
+            _logger.LogInformation(LoggingEvents.GET_DRINKS, "Getting all drinks");
+
             return _context.AllDrinks();
         }
 
@@ -43,10 +45,14 @@
         [HttpGet("{drinkName}")]
         public IActionResult Get(string drinkName)
         {
+            _logger.LogInformation(LoggingEvents.GET_DRINK_BY_NAME, "Getting drink with name {0}", drinkName);
+
             var drinkId = _context.LocateDrink(drinkName);
 
             if (drinkId == null)
             {
+                _logger.LogWarning(LoggingEvents.GET_DRINK_BY_NAME_NOT_FOUND, "Drink with name {0} not found", drinkName);
+
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
 
@@ -59,11 +65,15 @@
         [HttpPost]
         public async Task<IActionResult> Post([FromBody]AddDrinkRequest request)
         {
+            _logger.LogInformation(LoggingEvents.POST_DRINK, "Adding drink with name {0} and quantity {1}", request.DrinkName, request.Quantity);
+
             var existingDrinkItem =
                 _context.LocateDrink(request.DrinkName);
 
             if (existingDrinkItem != null)
             {
+                _logger.LogWarning(LoggingEvents.POST_DRINK_ALREADY_EXISTS, "Adding drink with name {0} already exists", request.DrinkName);
+
                 // Drink already exists on shopping list.
                 return StatusCode(422, $"Drink '{request.DrinkName}' already exists");
             }
@@ -80,11 +90,15 @@
         [HttpPut("{drinkName}")]
         public async Task<IActionResult> Put(string drinkName, [FromBody]int quantity)
         {
+            _logger.LogInformation(LoggingEvents.PUT_DRINK, "Updating drink with name {0} and quantity {1}", drinkName, quantity);
+
             var existingDrinkId =
                 _context.LocateDrink(drinkName);
 
             if (existingDrinkId == null)
             {
+                _logger.LogInformation(LoggingEvents.PUT_DRINK_NOT_FOUND, "Updating drink with name {0} not found", drinkName, quantity);
+
                 // Drink doesn't exist on shopping list.
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
@@ -105,11 +119,15 @@
         [HttpDelete("{drinkName}")]
         public async Task<IActionResult> Delete(string drinkName)
         {
+            _logger.LogInformation(LoggingEvents.DELETE_DRINK, "Deleting drink with name", drinkName);
+
             var existingDrinkId =
                 _context.LocateDrink(drinkName);
 
             if (existingDrinkId == null)
             {
+                _logger.LogInformation(LoggingEvents.DELETE_DRINK_NOT_FOUND, "Deleting drink with name {0} not found", drinkName);
+
                 // Drink doesn't exist on shopping list.
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
