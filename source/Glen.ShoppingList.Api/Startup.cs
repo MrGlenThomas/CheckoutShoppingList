@@ -1,6 +1,7 @@
 ﻿namespace Glen.ShoppingList.Api
 {
     using System;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.AspNetCore.Builder;
@@ -9,6 +10,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Infrastructure;
+    using Infrastructure.Data;
     using Infrastructure.EventSourcing;
     using Infrastructure.Handlers;
     using Infrastructure.Messaging;
@@ -19,10 +21,15 @@
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.IdentityModel.Tokens;
+    using Newtonsoft.Json;
     using Swashbuckle.AspNetCore.Swagger;
 
     public class Startup
     {
+        private readonly IConfigurationRoot _configuration;
+        private readonly IHostingEnvironment _environment;
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -30,14 +37,18 @@
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
-            Configuration = builder.Build();
-        }
 
-        public IConfigurationRoot Configuration { get; }
+            _environment = env;
+            _configuration = builder.Build();
+        }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton(_configuration);
+
+            services.AddMemoryCache();
+
             services.AddDbContext<ShoppingListContext>(opt => opt.UseInMemoryDatabase());  // Is this required now using Dao?
 
             services.AddTransient<IShoppingListDao, ShoppingListDao>();
@@ -103,9 +114,22 @@
                 };
             });
 
+            services.AddAuthorization(cfg =>
+            {
+                cfg.AddPolicy("SuperUsers", p => p.RequireClaim("SuperUser", "True"));
+            });
+
             services.AddMvc(options =>
             {
+                if (!_environment.IsProduction())
+                {
+                    options.SslPort = 44345;
+                }
                 options.Filters.Add(new RequireHttpsAttribute());
+            })
+            .AddJsonOptions(opt =>
+            {
+                opt.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
             });
 
             // Register the Swagger generator
@@ -118,7 +142,7 @@
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ShoppingListIdentityInitializer shoppingListIdentityInitializer)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddConsole(_configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
@@ -130,6 +154,20 @@
             });
 
             app.UseIdentity();
+
+            app.UseJwtBearerAuthentication(new JwtBearerOptions()
+            {
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+                TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = _configuration["Tokens:Issuer"],
+                    ValidAudience = _configuration["Tokens:Audience"],
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"])),
+                    ValidateLifetime = true
+                }
+            });
 
             app.UseMvc();
 

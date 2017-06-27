@@ -1,6 +1,7 @@
 ﻿namespace Glen.ShoppingList.Infrastructure.Handlers
 {
     using System;
+    using Data;
     using Events;
     using Messaging.Handling;
     using ReadModel;

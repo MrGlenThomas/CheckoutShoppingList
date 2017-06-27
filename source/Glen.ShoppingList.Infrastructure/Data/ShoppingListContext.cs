@@ -1,11 +1,12 @@
-﻿namespace Glen.ShoppingList.Infrastructure
+﻿namespace Glen.ShoppingList.Infrastructure.Data
 {
     using System;
     using System.Linq;
+    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
     using ReadModel;
 
-    public class ShoppingListContext : DbContext
+    public class ShoppingListContext : IdentityDbContext<ShoppingListUser>
     {
         public ShoppingListContext(DbContextOptions<ShoppingListContext> options)
             : base(options)
@@ -20,6 +21,8 @@
         }
 
         public DbSet<ShoppingListDrink> Drinks { get; set; }
+
+        public DbSet<ShoppingListUser> Users { get; set; }
 
         public T Find<T>(Guid id) where T : class
         {

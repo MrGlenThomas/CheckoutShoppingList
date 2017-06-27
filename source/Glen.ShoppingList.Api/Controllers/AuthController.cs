@@ -3,6 +3,7 @@
     using System;
     using System.Threading.Tasks;
     using Infrastructure;
+    using Infrastructure.Data;
     using Infrastructure.ReadModel;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,7 @@
             _logger = logger;
         }
 
-        [HttpPost("api/auth/login")]
+        [HttpPost("auth/login")]
         public async Task<IActionResult> Login([FromBody] CredentialModel model)
         {
             try

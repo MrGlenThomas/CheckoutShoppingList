@@ -3,8 +3,8 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Commands;
-    using Infrastructure;
     using Infrastructure.Commands;
+    using Infrastructure.Data;
     using Infrastructure.Messaging;
     using Infrastructure.ReadModel;
     using Microsoft.AspNetCore.Authorization;

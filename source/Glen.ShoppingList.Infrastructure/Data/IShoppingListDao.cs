@@ -1,4 +1,4 @@
-﻿namespace Glen.ShoppingList.Infrastructure
+﻿namespace Glen.ShoppingList.Infrastructure.Data
 {
     using System;
     using System.Collections.Generic;
