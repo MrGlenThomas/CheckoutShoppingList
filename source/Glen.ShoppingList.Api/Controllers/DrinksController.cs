@@ -1,5 +1,6 @@
 ﻿namespace Glen.ShoppingList.Api.Controllers
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Commands;
@@ -10,6 +11,7 @@
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Logging;
     using Model;
     using ShoppingList.Model.Commands;
@@ -20,14 +22,16 @@
     {
         private readonly IShoppingListDao _context;
         private readonly ICommandBus _bus;
+        private readonly IMemoryCache _memoryCache;
         private readonly ILogger<DrinksController> _logger;
         private readonly UserManager<ShoppingListUser> _userManager;
 
-        public DrinksController(IShoppingListDao context, ICommandBus bus, ILoggerFactory logger,
+        public DrinksController(IShoppingListDao context, ICommandBus bus, ILoggerFactory logger, IMemoryCache memoryCache,
             UserManager<ShoppingListUser> userManager)
         {
             _context = context;
             _bus = bus;
+            _memoryCache = memoryCache;
             _logger = logger.CreateLogger<DrinksController>();
             _userManager = userManager;
         }
@@ -56,7 +60,17 @@
                 return NotFound($"Drink not found with name '{drinkName}'");
             }
 
-            var drink = _context.FindDrink(drinkId);
+            object drink;
+
+            if (!_memoryCache.TryGetValue(drinkId, out drink))
+            {
+                drink = _context.FindDrink(drinkId);
+
+                var cacheEntryOptions = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromSeconds(30));
+
+                _memoryCache.Set(drinkId, drink, cacheEntryOptions);
+            }
 
             return Ok(drink);
         }
