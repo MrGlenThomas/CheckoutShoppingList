@@ -2,6 +2,7 @@
 {
     using System.IO;
     using Microsoft.AspNetCore.Hosting;
+    using StructureMap.AspNetCore;
 
     public class Program
     {
@@ -12,6 +13,7 @@
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
+                .UseStructureMap()
                 .Build();
 
             host.Run();

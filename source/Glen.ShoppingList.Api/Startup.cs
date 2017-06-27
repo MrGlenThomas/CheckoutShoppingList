@@ -23,6 +23,7 @@
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.IdentityModel.Tokens;
     using Newtonsoft.Json;
+    using StructureMap;
     using Swashbuckle.AspNetCore.Swagger;
 
     public class Startup
@@ -51,39 +52,8 @@
 
             services.AddDbContext<ShoppingListContext>(opt => opt.UseInMemoryDatabase());  // Is this required now using Dao?
 
-            services.AddTransient<IShoppingListDao, ShoppingListDao>();
-            services.AddTransient<ITextSerializer, JsonTextSerializer>();
-            services.AddTransient<IMessageSender, DirectMessageSender>(); // Switch to PipesMessageSender
-            //services.AddTransient<IMessageReceiver>(provider => commandMessageReceiver); // Switch to PipesMessageReceiver
-
-            var commandMessageReceiver = new DirectMessageReceiver();
-            var commandMessageSender = new DirectMessageSender(commandMessageReceiver);
+            ConfigureIoC(services);
             
-            services.AddTransient<ICommandBus, CommandBus>(provider => new CommandBus(commandMessageSender, new JsonTextSerializer()));
-
-            var eventMessageReceiver = new DirectMessageReceiver();
-            var eventMessageSender = new DirectMessageSender(eventMessageReceiver);
-            var eventBus = new EventBus(eventMessageSender, new JsonTextSerializer());
-
-            var commandHandlerRegistry = new CommandProcessor(commandMessageReceiver, new JsonTextSerializer());
-            var drinksCommandHandler =
-                new DrinkCommandHandler(new EventSourcedRepository<Drink>(eventBus,
-                        new JsonTextSerializer(), () => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>().UseInMemoryDatabase().Options)));
-            commandHandlerRegistry.Register(drinksCommandHandler);
-            commandHandlerRegistry.Start();
-            services.AddTransient<ICommandHandlerRegistry>(provider => commandHandlerRegistry);
-            
-            var drinkReadModelGenerator =
-                new DrinkReadModelGenerator(() => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
-            var eventHandlerRegistry = new EventProcessor(eventMessageReceiver, new JsonTextSerializer());
-            eventHandlerRegistry.Register(drinkReadModelGenerator);
-            eventHandlerRegistry.Start();
-            services.AddTransient<IEventHandlerRegistry>(provider => eventHandlerRegistry);
-            services.AddTransient<IEventBus, EventBus>();
-
-            services.AddTransient<Func<ShoppingListContext>>(s => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
-
-            services.AddTransient<ShoppingListIdentityInitializer>();
             services.AddIdentity<ShoppingListUser, IdentityRole>()
                 .AddEntityFrameworkStores<ShoppingListContext>();
 
@@ -143,6 +113,50 @@
                 c.DocumentFilter<BasicAuthDocumentFilter>();
             });
         }
+
+        public void ConfigureIoC(IServiceCollection services)
+        {
+            services.AddTransient<IShoppingListDao, ShoppingListDao>();
+            services.AddTransient<ITextSerializer, JsonTextSerializer>();
+            services.AddTransient<IMessageSender, DirectMessageSender>(); // Switch to PipesMessageSender
+            //services.AddTransient<IMessageReceiver>(provider => commandMessageReceiver); // Switch to PipesMessageReceiver
+
+            var commandMessageReceiver = new DirectMessageReceiver();
+            var commandMessageSender = new DirectMessageSender(commandMessageReceiver);
+
+            services.AddTransient<ICommandBus, CommandBus>(provider => new CommandBus(commandMessageSender, new JsonTextSerializer()));
+
+            var eventMessageReceiver = new DirectMessageReceiver();
+            var eventMessageSender = new DirectMessageSender(eventMessageReceiver);
+            var eventBus = new EventBus(eventMessageSender, new JsonTextSerializer());
+
+            var commandHandlerRegistry = new CommandProcessor(commandMessageReceiver, new JsonTextSerializer());
+            var drinksCommandHandler =
+                new DrinkCommandHandler(new EventSourcedRepository<Drink>(eventBus,
+                    new JsonTextSerializer(), () => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>().UseInMemoryDatabase().Options)));
+            commandHandlerRegistry.Register(drinksCommandHandler);
+            commandHandlerRegistry.Start();
+            services.AddTransient<ICommandHandlerRegistry>(provider => commandHandlerRegistry);
+
+            var drinkReadModelGenerator =
+                new DrinkReadModelGenerator(() => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
+            var eventHandlerRegistry = new EventProcessor(eventMessageReceiver, new JsonTextSerializer());
+            eventHandlerRegistry.Register(drinkReadModelGenerator);
+            eventHandlerRegistry.Start();
+            services.AddTransient<IEventHandlerRegistry>(provider => eventHandlerRegistry);
+            services.AddTransient<IEventBus, EventBus>();
+
+            services.AddTransient<Func<ShoppingListContext>>(s => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
+
+            services.AddTransient<ShoppingListIdentityInitializer>();
+        }
+
+        public void ConfigureContainer(Registry registry)
+        {
+            // Use StructureMap-specific APIs to register services in the registry.
+
+        }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ShoppingListIdentityInitializer shoppingListIdentityInitializer)
