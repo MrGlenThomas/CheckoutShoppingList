@@ -119,7 +119,6 @@
             services.AddTransient<IShoppingListDao, ShoppingListDao>();
             services.AddTransient<ITextSerializer, JsonTextSerializer>();
             services.AddTransient<IMessageSender, DirectMessageSender>(); // Switch to PipesMessageSender
-            //services.AddTransient<IMessageReceiver>(provider => commandMessageReceiver); // Switch to PipesMessageReceiver
 
             var commandMessageReceiver = new DirectMessageReceiver();
             var commandMessageSender = new DirectMessageSender(commandMessageReceiver);
@@ -155,6 +154,23 @@
         {
             // Use StructureMap-specific APIs to register services in the registry.
 
+            registry.Scan(_ =>
+            {
+                _.AssemblyContainingType(typeof(Startup));
+                _.WithDefaultConventions();
+                //_.AddAllTypesOf<IClass>();
+                _.ConnectImplementationsToTypesClosing(typeof(IEventSourcedRepository<>));
+            });
+
+            registry.For<IShoppingListDao>().Use<ShoppingListDao>();
+            registry.For<ITextSerializer>().Use<JsonTextSerializer>();
+            registry.For<IMessageSender>().Use<DirectMessageSender>();
+            registry.For<IMessageReceiver>().Use<DirectMessageReceiver>();
+            registry.For<ICommandBus>().Use<CommandBus>(); // CommandBus needs to use commandMessageSender instance
+            registry.For<IEventBus>().Use<EventBus>(); // EventBus needs to use eventMessageSender instance
+            registry.For<ICommandHandlerRegistry>().Use<CommandProcessor>();
+            registry.For<IEventHandlerRegistry>().Use<EventProcessor>();
+            registry.For<ShoppingListContext>().Use(_ => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options)).ContainerScoped();
         }
 
 
@@ -169,7 +185,7 @@
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("https://localhost:44345/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("https://localhost:44345/swagger/v1/swagger.json", "Shopping List API V1");
             });
 
             app.UseIdentity();
