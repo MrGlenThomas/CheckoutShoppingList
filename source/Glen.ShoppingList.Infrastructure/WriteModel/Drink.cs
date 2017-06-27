@@ -11,6 +11,8 @@
 
         public int Quantity { get; set; }
 
+        public bool IsDeleted { get; set; }
+
         protected Drink(Guid id)
             : base(id)
         {
@@ -33,11 +35,21 @@
 
         public void UpdateDrinkQuantity(int quantity)
         {
+            if (quantity <= 0)
+            {
+                throw new InvalidOperationException("Quantity must be a positive integer.");
+            }
+
             Update(new DrinkQuantityUpdated { Quantity = quantity });
         }
 
         public void Delete()
         {
+            if (IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot delete a deleted drink.");
+            }
+
             Update(new DrinkDeleted());
         }
 
@@ -54,7 +66,7 @@
 
         private void OnDrinkDeleted(DrinkDeleted drinkDeleted)
         {
-            Quantity = 0;
+            IsDeleted = true;
         }
     }
 }
