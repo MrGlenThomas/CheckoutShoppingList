@@ -1,8 +1,8 @@
 ﻿namespace Glen.ShoppingList.Api
 {
     using System;
-    using System.Text;
     using System.Threading.Tasks;
+    using Authentication;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -119,6 +119,9 @@
                 cfg.AddPolicy("SuperUsers", p => p.RequireClaim("SuperUser", "True"));
             });
 
+            services.AddOptions();
+            services.Configure<TokenOptions>(_configuration.GetSection(nameof(TokenOptions)));
+
             services.AddMvc(options =>
             {
                 if (!_environment.IsProduction())
@@ -136,6 +139,8 @@
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Checkout.com Shopping List", Version = "v1" });
+                c.AddSecurityDefinition("basic", new BasicAuthScheme { Type = "basic" });
+                c.DocumentFilter<BasicAuthDocumentFilter>();
             });
         }
 
@@ -150,21 +155,23 @@
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("https://localhost:44345/swagger/v1/swagger.json", "My API V1");
             });
 
             app.UseIdentity();
 
-            app.UseJwtBearerAuthentication(new JwtBearerOptions()
+            var options = _configuration.GetSection(nameof(TokenOptions)).Get<TokenOptions>();
+
+            app.UseJwtBearerAuthentication(new JwtBearerOptions
             {
                 AutomaticAuthenticate = true,
                 AutomaticChallenge = true,
                 TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidIssuer = _configuration["Tokens:Issuer"],
-                    ValidAudience = _configuration["Tokens:Audience"],
+                    ValidIssuer = options.Issuer,
+                    ValidAudience = options.Audience,
+                    IssuerSigningKey = options.GetSymmetricSecurityKey(),
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Tokens:Key"])),
                     ValidateLifetime = true
                 }
             });

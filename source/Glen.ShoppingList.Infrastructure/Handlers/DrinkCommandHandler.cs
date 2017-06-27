@@ -4,7 +4,6 @@
     using Commands;
     using EventSourcing;
     using Messaging.Handling;
-    using Model;
     using Model.Commands;
     using WriteModel;
 

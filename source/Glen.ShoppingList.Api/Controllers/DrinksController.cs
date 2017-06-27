@@ -34,11 +34,11 @@
 
         // GET api/drinks
         [HttpGet]
-        public IEnumerable<ShoppingListDrink> Get()
+        public IEnumerable<ShoppingListDrink> Get(int pageSize = 5, int page = 1)
         {
             _logger.LogInformation(LoggingEvents.GET_DRINKS, "Getting all drinks");
 
-            return _context.AllDrinks();
+            return _context.AllDrinks(pageSize, page);
         }
 
         // GET api/drinks/pepsi

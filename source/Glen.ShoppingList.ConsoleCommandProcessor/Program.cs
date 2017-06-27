@@ -6,7 +6,6 @@
     using Infrastructure.Handlers;
     using Infrastructure.Messaging;
     using Infrastructure.Messaging.Handling;
-    using Infrastructure.ReadModel;
     using Infrastructure.Serialization;
     using Infrastructure.WriteModel;
     using Microsoft.EntityFrameworkCore;

@@ -8,7 +8,7 @@
     {
         Guid? LocateDrink(string drinkName);
 
-        IEnumerable<ShoppingListDrink> AllDrinks();
+        IEnumerable<ShoppingListDrink> AllDrinks(int pageSize, int page);
 
         ShoppingListDrink FindDrink(Guid? drinkId);
     }

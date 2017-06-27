@@ -22,8 +22,6 @@
 
         public DbSet<ShoppingListDrink> Drinks { get; set; }
 
-        public DbSet<ShoppingListUser> Users { get; set; }
-
         public T Find<T>(Guid id) where T : class
         {
             return Set<T>().Find(id);

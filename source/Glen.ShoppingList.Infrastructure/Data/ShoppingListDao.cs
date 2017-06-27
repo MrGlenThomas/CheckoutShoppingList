@@ -28,11 +28,11 @@
             }
         }
 
-        public IEnumerable<ShoppingListDrink> AllDrinks()
+        public IEnumerable<ShoppingListDrink> AllDrinks(int pageSize, int pageNumber)
         {
             using (var context = _contextFactory.Invoke())
             {
-                return context.Drinks.ToArray();
+                return context.Drinks.Paginate(new PaginationArgs(pageSize, pageNumber)).ToArray();
             }
         }
 

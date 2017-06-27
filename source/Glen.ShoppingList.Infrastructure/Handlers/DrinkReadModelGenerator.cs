@@ -5,7 +5,6 @@
     using Events;
     using Messaging.Handling;
     using ReadModel;
-    using WriteModel;
 
     public class DrinkReadModelGenerator : IEventHandler<DrinkAdded>, IEventHandler<DrinkQuantityUpdated>, IEventHandler<DrinkDeleted>
     {
