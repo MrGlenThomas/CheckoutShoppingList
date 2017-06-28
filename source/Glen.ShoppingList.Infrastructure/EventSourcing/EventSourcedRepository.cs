@@ -5,6 +5,7 @@
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using Data;
     using Messaging;
     using Serialization;
 
@@ -14,10 +15,10 @@
         private static readonly string SourceType = typeof(T).Name;
         private readonly IEventBus _eventBus;
         private readonly ITextSerializer _serializer;
-        private readonly Func<EventStoreContext> _contextFactory;
+        private readonly IEventStoreContextFactory _contextFactory;
         private readonly Func<Guid, IEnumerable<IVersionedEvent>, T> entityFactory;
 
-        public EventSourcedRepository(IEventBus eventBus, ITextSerializer serializer, Func<EventStoreContext> contextFactory)
+        public EventSourcedRepository(IEventBus eventBus, ITextSerializer serializer, IEventStoreContextFactory contextFactory)
         {
             _eventBus = eventBus;
             _serializer = serializer;
@@ -34,7 +35,7 @@
 
         public T Find(Guid id)
         {
-            using (var context = _contextFactory.Invoke())
+            using (var context = _contextFactory.GetInstance())
             {
                 var deserialized = context.Set<Event>()
                     .Where(x => x.AggregateId == id && x.AggregateType == SourceType)
@@ -67,7 +68,7 @@
         {
             // TODO: guarantee that only incremental versions of the event are stored
             var events = eventSourced.Events.ToArray();
-            using (var context = _contextFactory.Invoke())
+            using (var context = _contextFactory.GetInstance())
             {
                 var eventsSet = context.Set<Event>();
                 foreach (var e in events)

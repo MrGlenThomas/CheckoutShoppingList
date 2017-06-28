@@ -1,6 +1,5 @@
 ﻿namespace Glen.ShoppingList.Infrastructure.Handlers
 {
-    using System;
     using Data;
     using Events;
     using Messaging.Handling;
@@ -8,16 +7,16 @@
 
     public class DrinkReadModelGenerator : IEventHandler<DrinkAdded>, IEventHandler<DrinkQuantityUpdated>, IEventHandler<DrinkDeleted>
     {
-        private readonly Func<ShoppingListContext> _contextFactory;
+        private readonly ShoppingListContextFactory _contextFactory;
 
-        public DrinkReadModelGenerator(Func<ShoppingListContext> contextFactory)
+        public DrinkReadModelGenerator(ShoppingListContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }
 
         public void Handle(DrinkAdded drinkAddedEvent)
         {
-            using (var repository = _contextFactory.Invoke())
+            using (var repository = _contextFactory.GetInstance())
             {
                 var dto = repository.Find<ShoppingListDrink>(drinkAddedEvent.SourceId);
                 if (dto != null)
@@ -40,7 +39,7 @@
 
         public void Handle(DrinkQuantityUpdated drinkQuantityUpdatedEvent)
         {
-            using (var repository = _contextFactory.Invoke())
+            using (var repository = _contextFactory.GetInstance())
             {
                 var dto = repository.Find<ShoppingListDrink>(drinkQuantityUpdatedEvent.SourceId);
                 if (dto == null)
@@ -58,7 +57,7 @@
 
         public void Handle(DrinkDeleted drinkDeletedEvent)
         {
-            using (var repository = _contextFactory.Invoke())
+            using (var repository = _contextFactory.GetInstance())
             {
                 var dto = repository.Find<ShoppingListDrink>(drinkDeletedEvent.SourceId);
                 if (dto == null)

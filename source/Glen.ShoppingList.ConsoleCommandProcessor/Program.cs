@@ -2,6 +2,7 @@
 {
     using System;
     using Infrastructure;
+    using Infrastructure.Data;
     using Infrastructure.EventSourcing;
     using Infrastructure.Handlers;
     using Infrastructure.Messaging;
@@ -27,8 +28,8 @@
                 new DrinkCommandHandler(
                     new EventSourcedRepository<Drink>(new EventBus(new PipesMessageSender(), new JsonTextSerializer()),
                         new JsonTextSerializer(),
-                        () => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>()
-                            .UseInMemoryDatabase().Options)));
+                          new EventStoreContextFactory(() => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>()
+                            .UseInMemoryDatabase().Options))));
 
             commandHandlerRegistry.Register(drinksCommandHandler);
             

@@ -12,12 +12,10 @@
     using Infrastructure;
     using Infrastructure.Data;
     using Infrastructure.EventSourcing;
-    using Infrastructure.Handlers;
     using Infrastructure.Messaging;
     using Infrastructure.Messaging.Handling;
     using Infrastructure.ReadModel;
     using Infrastructure.Serialization;
-    using Infrastructure.WriteModel;
     using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.AspNetCore.Mvc;
@@ -47,19 +45,14 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(_configuration);
-
             services.AddMemoryCache();
-
-            services.AddDbContext<ShoppingListContext>(opt => opt.UseInMemoryDatabase());  // Is this required now using Dao?
-
-            ConfigureIoC(services);
             
             services.AddIdentity<ShoppingListUser, IdentityRole>()
                 .AddEntityFrameworkStores<ShoppingListContext>();
 
             services.Configure<IdentityOptions>(options =>
             {
-                options.Cookies.ApplicationCookie.Events = new CookieAuthenticationEvents()
+                options.Cookies.ApplicationCookie.Events = new CookieAuthenticationEvents
                 {
                     OnRedirectToLogin = context =>
                     {
@@ -109,67 +102,73 @@
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info { Title = "Checkout.com Shopping List", Version = "v1" });
-                c.AddSecurityDefinition("basic", new BasicAuthScheme { Type = "basic" });
-                c.DocumentFilter<BasicAuthDocumentFilter>();
+                //c.AddSecurityDefinition("basic", new BasicAuthScheme { Type = "basic" });
+                //c.DocumentFilter<BasicAuthDocumentFilter>();
             });
-        }
-
-        public void ConfigureIoC(IServiceCollection services)
-        {
-            services.AddTransient<IShoppingListDao, ShoppingListDao>();
-            services.AddTransient<ITextSerializer, JsonTextSerializer>();
-            services.AddTransient<IMessageSender, DirectMessageSender>(); // Switch to PipesMessageSender
-            //services.AddTransient<IMessageReceiver>(provider => commandMessageReceiver); // Switch to PipesMessageReceiver
-
-            var commandMessageReceiver = new DirectMessageReceiver();
-            var commandMessageSender = new DirectMessageSender(commandMessageReceiver);
-
-            services.AddTransient<ICommandBus, CommandBus>(provider => new CommandBus(commandMessageSender, new JsonTextSerializer()));
-
-            var eventMessageReceiver = new DirectMessageReceiver();
-            var eventMessageSender = new DirectMessageSender(eventMessageReceiver);
-            var eventBus = new EventBus(eventMessageSender, new JsonTextSerializer());
-
-            var commandHandlerRegistry = new CommandProcessor(commandMessageReceiver, new JsonTextSerializer());
-            var drinksCommandHandler =
-                new DrinkCommandHandler(new EventSourcedRepository<Drink>(eventBus,
-                    new JsonTextSerializer(), () => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>().UseInMemoryDatabase().Options)));
-            commandHandlerRegistry.Register(drinksCommandHandler);
-            commandHandlerRegistry.Start();
-            services.AddTransient<ICommandHandlerRegistry>(provider => commandHandlerRegistry);
-
-            var drinkReadModelGenerator =
-                new DrinkReadModelGenerator(() => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
-            var eventHandlerRegistry = new EventProcessor(eventMessageReceiver, new JsonTextSerializer());
-            eventHandlerRegistry.Register(drinkReadModelGenerator);
-            eventHandlerRegistry.Start();
-            services.AddTransient<IEventHandlerRegistry>(provider => eventHandlerRegistry);
-            services.AddTransient<IEventBus, EventBus>();
-
-            services.AddTransient<Func<ShoppingListContext>>(s => () => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options));
-
-            services.AddTransient<ShoppingListIdentityInitializer>();
         }
 
         public void ConfigureContainer(Registry registry)
         {
             // Use StructureMap-specific APIs to register services in the registry.
 
+            registry.Scan(_ =>
+            {
+                _.AssemblyContainingType(typeof(Startup));
+                _.Assembly("Glen.ShoppingList.Infrastructure");
+                _.WithDefaultConventions();
+                _.AddAllTypesOf<ICommandHandler>();
+                _.AddAllTypesOf<IEventHandler>();
+            });
+
+            registry.For(typeof(IEventSourcedRepository<>)).Use(typeof(EventSourcedRepository<>));
+            registry.For<ITextSerializer>().Use<JsonTextSerializer>();
+            registry.For<IMessageReceiver>().Use<DirectMessageReceiver>().Singleton().Named("CommandMessageReceiver").SetProperty(receiver => receiver.Name = "CommandMessageReceiver");
+            registry.For<IMessageReceiver>().Use<DirectMessageReceiver>().Singleton().Named("EventMessageReceiver").SetProperty(receiver => receiver.Name = "EventMessageReceiver"); ;
+            registry.For<IMessageSender>().Add<DirectMessageSender>().Named("CommandMessageSender").Ctor<IMessageReceiver>().IsNamedInstance("CommandMessageReceiver");
+            registry.For<IMessageSender>().Use<DirectMessageSender>().Named("EventMessageSender").Ctor<IMessageReceiver>().IsNamedInstance("EventMessageReceiver");
+            registry.For<ICommandBus>().Use<CommandBus>().Ctor<IMessageSender>().IsNamedInstance("CommandMessageSender"); // CommandBus needs to use commandMessageSender instance
+            registry.For<IEventBus>().Use<EventBus>().Ctor<IMessageSender>().IsNamedInstance("EventMessageSender"); // EventBus needs to use eventMessageSender instance
+            registry.For<ICommandHandlerRegistry>().Use<CommandProcessor>().Singleton().Ctor<IMessageReceiver>().IsNamedInstance("CommandMessageReceiver");
+            registry.For<IEventHandlerRegistry>().Use<EventProcessor>().Singleton().Ctor<IMessageReceiver>().IsNamedInstance("EventMessageReceiver");
+            registry.Forward<ICommandHandlerRegistry, IProcessor>();
+            registry.Forward<IEventHandlerRegistry, IProcessor>();
+            registry.For<ShoppingListContext>().Use(_ => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase(null).Options)).AlwaysUnique();
+            registry.For<IShoppingListContextFactory>().Use<ShoppingListContextFactory>().Ctor<Func<ShoppingListContext>>().Is(() => new ShoppingListContext(new DbContextOptionsBuilder<ShoppingListContext>().UseInMemoryDatabase().Options)).AlwaysUnique();
+            registry.For<IEventStoreContextFactory>().Use<EventStoreContextFactory>().Ctor<Func<EventStoreContext>>().Is(() => new EventStoreContext(new DbContextOptionsBuilder<EventStoreContext>().UseInMemoryDatabase().Options)).AlwaysUnique();
         }
 
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ShoppingListIdentityInitializer shoppingListIdentityInitializer)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ShoppingListIdentityInitializer shoppingListIdentityInitializer, IContainer container)
         {
             loggerFactory.AddConsole(_configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+
+            // Register command handlers with command handler registry
+            var commandHandlerRegistry = app.ApplicationServices.GetService<ICommandHandlerRegistry>();
+            foreach (var commandHandler in app.ApplicationServices.GetServices<ICommandHandler>())
+            {
+                commandHandlerRegistry.Register(commandHandler);
+            }
+
+            // Register event handlers with event handler registry
+            var eventHandlerRegistry = app.ApplicationServices.GetService<IEventHandlerRegistry>();
+            foreach (var eventHandler in app.ApplicationServices.GetServices<IEventHandler>())
+            {
+                eventHandlerRegistry.Register(eventHandler);
+            }
+
+            // Start the command/event processors. In a real-world scenario these would be running in an external process
+            foreach (var processor in app.ApplicationServices.GetServices<IProcessor>())
+            {
+                processor.Start();
+            }
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.), specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("https://localhost:44345/swagger/v1/swagger.json", "My API V1");
+                c.SwaggerEndpoint("https://localhost:44345/swagger/v1/swagger.json", "Shopping List API V1");
             });
 
             app.UseIdentity();

@@ -32,8 +32,6 @@
 
             foreach (var invocationTuple in BuildHandlerInvocations(handler))
             {
-                var envelopeType = typeof(Envelope<>).MakeGenericType(invocationTuple.Item1);
-
                 List<Tuple<Type, Action<Envelope>>> invocations;
                 if (!_handlersByEventType.TryGetValue(invocationTuple.Item1, out invocations))
                 {
