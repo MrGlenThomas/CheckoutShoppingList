@@ -4,6 +4,8 @@
 
     public class DirectMessageReceiver : IMessageReceiver
     {
+        public string Name { get; set; }
+
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
 
         public void Start()

@@ -7,16 +7,16 @@
 
     public class ShoppingListDao : IShoppingListDao
     {
-        private readonly Func<ShoppingListContext> _contextFactory;
+        private readonly ShoppingListContextFactory _contextFactory;
 
-        public ShoppingListDao(Func<ShoppingListContext> contextFactory)
+        public ShoppingListDao(ShoppingListContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
         }
 
         public Guid? LocateDrink(string drinkName)
         {
-            using (var context = _contextFactory.Invoke())
+            using (var context = _contextFactory.GetInstance())
             {
                 var drinkProjection = context
                     .Query<ShoppingListDrink>()
@@ -30,7 +30,7 @@
 
         public IEnumerable<ShoppingListDrink> AllDrinks(int pageSize, int pageNumber)
         {
-            using (var context = _contextFactory.Invoke())
+            using (var context = _contextFactory.GetInstance())
             {
                 return context.Drinks.Paginate(new PaginationArgs(pageSize, pageNumber)).ToArray();
             }
@@ -38,7 +38,7 @@
 
         public ShoppingListDrink FindDrink(Guid? drinkId)
         {
-            using (var context = _contextFactory.Invoke())
+            using (var context = _contextFactory.GetInstance())
             {
                 return context.Query<ShoppingListDrink>().FirstOrDefault(dto => dto.Id == drinkId);
             }
